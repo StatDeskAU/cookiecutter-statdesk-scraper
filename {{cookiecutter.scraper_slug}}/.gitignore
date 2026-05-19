@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.pytest_cache/
+.ruff_cache/
+build/
+dist/
+
+# Env
+.env
+.env.local
+
+# Output
+output/
+*.tmp.*
+
+# OS
+.DS_Store
+Thumbs.db

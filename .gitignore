@@ -1,0 +1,13 @@
+# cookiecutter testing output
+output/
+test-output/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+
+# OS
+.DS_Store
+Thumbs.db

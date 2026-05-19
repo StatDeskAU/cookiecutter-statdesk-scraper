@@ -1,0 +1,55 @@
+# Prefect deployment manifest for {{ cookiecutter.scraper_slug }}.
+# Registered automatically by .github/workflows/deploy.yml on push to {{ cookiecutter.default_branch }}.
+# The shared prefect-worker (Dokploy) executes these deployments.
+
+name: {{ cookiecutter.scraper_short_name }}
+prefect-version: 3.x
+
+pull:
+  - prefect.deployments.steps.git_clone:
+      id: clone
+      repository: https://github.com/{{ cookiecutter.github_org }}/{{ cookiecutter.scraper_slug }}
+      branch: {{ cookiecutter.default_branch }}
+      access_token: "{% raw %}{{ prefect.blocks.secret.github-pat }}{% endraw %}"
+  # Prefect's `run_shell_script` shlex-splits and exec's the first token
+  # as a binary; shell builtins (&&, ||, |, multi-line) don't work. Use
+  # one step per command.
+  - prefect.deployments.steps.run_shell_script:
+      id: deps
+      script: pip install --no-cache-dir .
+      directory: "{% raw %}{{ clone.directory }}{% endraw %}"
+  - prefect.deployments.steps.run_shell_script:
+      id: verify
+      # Loud failure if the install above silently no-op'd.
+      script: python -c "import {{ cookiecutter.package_name }}, sys; sys.stderr.write(f'{{ cookiecutter.package_name }} at {{ '{' }}{{ cookiecutter.package_name }}.__file__{{ '}' }}\n')"
+      directory: "{% raw %}{{ clone.directory }}{% endraw %}"
+
+deployments:
+  - name: {{ cookiecutter.scraper_short_name }}-primary
+    entrypoint: pipeline_flow.py:{{ cookiecutter.primary_flow_name }}
+    work_pool:
+      name: default
+    tags: [{{ cookiecutter.scraper_short_name }}]
+    concurrency_limit: 1
+    paused: true
+    schedule:
+      cron: "{{ cookiecutter.primary_cron }}"
+      timezone: Australia/Sydney
+    job_variables:
+      env:
+        PGDATABASE: {{ cookiecutter.pg_database }}
+{% if cookiecutter.has_warehouse_mirror == "y" %}
+  - name: {{ cookiecutter.scraper_short_name }}-warehouse-mirror
+    entrypoint: pipeline_warehouse_mirror.py:mirror
+    work_pool:
+      name: default
+    tags: [{{ cookiecutter.scraper_short_name }}, warehouse-mirror]
+    concurrency_limit: 1
+    paused: true
+    schedule:
+      cron: "{{ cookiecutter.mirror_cron }}"
+      timezone: Australia/Sydney
+    job_variables:
+      env:
+        PGDATABASE: {{ cookiecutter.pg_database }}
+{% endif %}

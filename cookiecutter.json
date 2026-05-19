@@ -1,0 +1,15 @@
+{
+  "scraper_number": "0099",
+  "scraper_short_name": "template-smoke",
+  "scraper_slug": "{{ cookiecutter.scraper_short_name }}-scraper",
+  "package_name": "{{ cookiecutter.scraper_short_name.lower().replace('-', '_') }}_scraper",
+  "github_org": "StatDeskAU",
+  "default_branch": "main",
+  "has_warehouse_mirror": ["y", "n"],
+  "pg_database": "{{ cookiecutter.package_name }}",
+  "primary_flow_name": "{{ cookiecutter.scraper_short_name.replace('-', '_') }}_run",
+  "primary_cron": "0 19 * * *",
+  "mirror_cron": "30 20 * * *",
+  "scraper_description": "StatDeskAU portfolio scraper for {{ cookiecutter.scraper_short_name }}.",
+  "statdesk_prefect_tools_sha": "e3b3fa96514dbcf253ecf7f0f3af4b1888ee6edd"
+}
